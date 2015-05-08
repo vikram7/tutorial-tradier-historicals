@@ -4,7 +4,7 @@ require 'net/https'
 require 'json'
 require 'pry'
 
-securities = %w[
+INTERNET_STOCKS = %w[
   FB
   GOOGL
   YELP
@@ -20,10 +20,11 @@ securities = %w[
 
 ## Get historical data from Tradier ##
 
-historicals = Hash.new
+def get_historicals(security)
+  historicals = Hash.new
 
-count = 1
-securities.each do |security|
+  count = 1
+
   uri = URI.parse("https://sandbox.tradier.com/v1/markets/history?symbol=#{security}&start=2010-01-01")
   http = Net::HTTP.new(uri.host, uri.port)
   http.read_timeout = 30
@@ -49,52 +50,63 @@ securities.each do |security|
   end
   puts "#{count}: #{security}. got tradier data."
   count += 1
+
+  historicals
 end
 
 ## Calculate price changes by day ##
 
-price_changes = Hash.new
+def get_price_changes(security, historicals)
 
-historicals.each do |security, date_and_data|
-  temp = nil
-  price_changes[security] = Hash.new
-  date_and_data.each do |date, data|
-    last_price = historicals[security][date]["close"]
-    prior_price = temp
-    if temp
-      price_changes[security][date] = last_price / prior_price - 1
+  price_changes = Hash.new
+
+  historicals.each do |security, date_and_data|
+    temp = nil
+    price_changes[security] = Hash.new
+    date_and_data.each do |date, data|
+      last_price = historicals[security][date]["close"]
+      prior_price = temp
+      if temp
+        price_changes[security][date] = last_price / prior_price - 1
+      end
+      temp = last_price
     end
-    temp = last_price
   end
+
+  price_changes
 end
 
-## Get 5 best and 5 worst performing dates
+## Get 5 best and 5 worst performing dates ##
 
-best_and_worst_five = Hash.new
+def get_best_and_worst_five(security, price_changes)
+  best_and_worst_five = Hash.new
 
-price_changes.each do |security, date_and_return|
-  best_and_worst_five[security] = Hash.new
-  sorted_dates_and_returns = date_and_return.sort_by { |date, value| value }
-  worst_dates_and_returns = sorted_dates_and_returns.first(5)
-  best_dates_and_returns = sorted_dates_and_returns.last(5)
-  worst_dates_and_returns.each do |date_and_return|
-    best_and_worst_five[security][date_and_return.first] = date_and_return.last
+  price_changes.each do |security, date_and_return|
+    best_and_worst_five[security] = Hash.new
+    sorted_dates_and_returns = date_and_return.sort_by { |date, value| value }
+    worst_dates_and_returns = sorted_dates_and_returns.first(5)
+    best_dates_and_returns = sorted_dates_and_returns.last(5)
+    worst_dates_and_returns.each do |date_and_return|
+      best_and_worst_five[security][date_and_return.first] = date_and_return.last
+    end
+    best_dates_and_returns.each do |date_and_return|
+      best_and_worst_five[security][date_and_return.first] = date_and_return.last
+    end
   end
-  best_dates_and_returns.each do |date_and_return|
-    best_and_worst_five[security][date_and_return.first] = date_and_return.last
-  end
+
+  best_and_worst_five
 end
 
-## Add Sinatra routes to return JSONs of above calculations
-
-get '/' do
-  content_type :json
-  return best_and_worst_five.to_json
-end
+## Add Sinatra routes to return JSONs of above calculations ##
 
 get '/:security' do
   content_type :json
   security = params[:security].upcase
+
+  historicals = get_historicals(security)
+  price_changes = get_price_changes(security, historicals)
+  best_and_worst_five = get_best_and_worst_five(security, price_changes)
+
   return best_and_worst_five[security].to_json
 end
 
