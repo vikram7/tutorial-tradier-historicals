@@ -67,4 +67,21 @@ historicals.each do |security, date_and_data|
   end
 end
 
+## Get 5 best and 5 worst performing dates
+
+best_and_worst_five = Hash.new
+
+price_changes.each do |security, date_and_return|
+  best_and_worst_five[security] = Hash.new
+  sorted_dates_and_returns = date_and_return.sort_by { |date, value| value }
+  worst_dates_and_returns = sorted_dates_and_returns.first(5)
+  best_dates_and_returns = sorted_dates_and_returns.last(5)
+  worst_dates_and_returns.each do |date_and_return|
+    best_and_worst_five[security][date_and_return.first] = date_and_return.last
+  end
+  best_dates_and_returns.each do |date_and_return|
+    best_and_worst_five[security][date_and_return.first] = date_and_return.last
+  end
+end
+
 binding.pry
