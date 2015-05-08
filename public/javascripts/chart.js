@@ -10,7 +10,6 @@ $(document).ready(function() {
     dataType:'json',
     success: function(data) {
       alert("works!");
-      debugger;
     },
     error: function() {
       alert("Sorry")
