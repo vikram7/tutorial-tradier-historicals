@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'sinatra/json'
 require 'uri'
 require 'net/https'
 require 'json'
@@ -97,17 +98,17 @@ def get_best_and_worst_five(security, price_changes)
   best_and_worst_five
 end
 
-## Add Sinatra routes to return JSONs of above calculations ##
+## Sinatra app ##
 
 get '/:security' do
-  content_type :json
   security = params[:security].upcase
 
   historicals = get_historicals(security)
   price_changes = get_price_changes(security, historicals)
   best_and_worst_five = get_best_and_worst_five(security, price_changes)
 
-  return best_and_worst_five[security].to_json
+  best_and_worst_five = json best_and_worst_five[security]
+  erb :show, locals: { best_and_worst_five: best_and_worst_five }
 end
 
 
