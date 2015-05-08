@@ -18,4 +18,6 @@ Using the Tradier API to get historical stock data.
 * How you would use Sinatra to make an API that returns that data.
 
 ##Plotting the data
-* How you would use the API to plot the data.
+* How you would use the API to plot the data?
+* Link to other Highcharts tutorial.
+* Show finished product.
