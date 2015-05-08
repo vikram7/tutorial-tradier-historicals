@@ -53,8 +53,9 @@ end
 ## Calculate price changes by day ##
 
 price_changes = Hash.new
-temp = nil
+
 historicals.each do |security, date_and_data|
+  temp = nil
   price_changes[security] = Hash.new
   date_and_data.each do |date, data|
     last_price = historicals[security][date]["close"]
