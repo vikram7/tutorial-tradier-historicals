@@ -1,3 +1,4 @@
+require 'sinatra'
 require 'uri'
 require 'net/https'
 require 'json'
@@ -84,4 +85,17 @@ price_changes.each do |security, date_and_return|
   end
 end
 
-binding.pry
+## Add Sinatra routes to return JSONs of above calculations
+
+get '/' do
+  content_type :json
+  return best_and_worst_five.to_json
+end
+
+get '/:security' do
+  content_type :json
+  security = params[:security].upcase
+  return best_and_worst_five[security].to_json
+end
+
+
