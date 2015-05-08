@@ -17,6 +17,8 @@ securities = %w[
   PCLN
 ]
 
+## Get historical data from Tradier ##
+
 historicals = Hash.new
 
 count = 1
@@ -46,6 +48,22 @@ securities.each do |security|
   end
   puts "#{count}: #{security}. got tradier data."
   count += 1
+end
+
+## Calculate price changes by day ##
+
+price_changes = Hash.new
+temp = nil
+historicals.each do |security, date_and_data|
+  price_changes[security] = Hash.new
+  date_and_data.each do |date, data|
+    last_price = historicals[security][date]["close"]
+    prior_price = temp
+    if temp
+      price_changes[security][date] = last_price / prior_price - 1
+    end
+    temp = last_price
+  end
 end
 
 binding.pry
