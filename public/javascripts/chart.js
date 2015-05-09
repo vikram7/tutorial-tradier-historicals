@@ -53,7 +53,7 @@ $(document).ready(function() {
         },
         yAxis: {
             title: {
-                text: 'Return (absolute value)'
+                text: 'Return % (absolute value)'
             }
         },
         plotOptions: {
