@@ -122,9 +122,52 @@ Which returns . . .
      "root_symbols"=>"AAPL,AAPL7"}}}
 ```
 
-Perfect! We have a good deal of quote related data in the response and now it's in a format we can do something with. We could do more by appending more symbols to the API endpoint, but I think the idea is fairly clear here. Now that we know that our API calls are working, let's get what we need: historical data.
+Perfect! We have a good deal of quote related data in the response and now it's in a format we can do something with. We get quote data on multiple stocks by appending more symbols to the API endpoint, but I think the idea is fairly clear here. Feel free to try it out on your own.
 
-* How you would get historical data.
+Now that we know that our API calls are working, let's get what we need: historical data. If we go through the docs, we'll find the endpoint that we care about to be the following one if we wanted historical data on AAPL:
+
+```
+"https://sandbox.tradier.com/v1/markets/history?symbol=AAPL"
+```
+
+If we append that endpoint with `&start=2010-01-01` we will get the historical data from January 1st, 2010 through now:
+
+```
+"https://sandbox.tradier.com/v1/markets/history?symbol=AAPL&start=2010-01-01"
+```
+
+Let's reuse some of the Ruby code from before, except modify the endpoint:
+
+```ruby
+uri = URI.parse("https://sandbox.tradier.com/v1/markets/history?symbol=AAPL&start=2010-01-01")
+http = Net::HTTP.new(uri.host, uri.port)
+http.read_timeout = 30
+http.use_ssl = true
+http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+request = Net::HTTP::Get.new(uri.request_uri)
+request["Accept"] = "application/json"
+request["Authorization"] = "Bearer " + ENV["TOKEN"]
+underlying_data = http.request(request)
+parsed_underlying_data = JSON.parse(underlying_data.body)
+```
+
+What does our JSON-friendly parsed output look like?:
+
+```ruby
+parsed_underlying_data = JSON.parse(underlying_data.body)
+=> {"history"=>
+  {"day"=>
+    [{"date"=>"2010-01-04", "open"=>30.49, "high"=>30.642857, "low"=>30.34, "close"=>30.572857, "volume"=>123432050},
+     {"date"=>"2010-01-05", "open"=>30.657143, "high"=>30.798571, "low"=>30.464286, "close"=>30.625714, "volume"=>150476000},
+     .
+     .
+     .
+     {"date"=>"2015-05-07", "open"=>124.77, "high"=>126.08, "low"=>124.02, "close"=>125.26, "volume"=>43940895},
+     {"date"=>"2015-05-08", "open"=>126.68, "high"=>127.62, "low"=>126.11, "close"=>127.62, "volume"=>55550382}]}}
+```
+
+Great! It looks like we have historical data from January 4, 2010 (the first trading day of that year) to the market close on Friday May 8, 2015. Keeping in mind that we're looking for the biggest positive and negative moves in a stock, we just need to parse that data to get the daily returns over the same time period.
+
 * Writing Ruby code to parse that data.
 * How you would use Sinatra to make an API that returns that data.
 
