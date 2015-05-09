@@ -15,7 +15,7 @@ $(document).ready(function() {
             zoomType: 'xy'
         },
         title: {
-            text: 'Ticker: ' + security.toUpperCase()
+            text: 'The Five Best and Worst Performing Days for Ticker ' + security.toUpperCase()
         },
         subtitle: {
             text: 'Data Source: Tradier API'
@@ -42,7 +42,7 @@ $(document).ready(function() {
         plotOptions: {
             scatter: {
                 marker: {
-                    radius: 10,
+                    radius: 7,
                     states: {
                         hover: {
                             enabled: true,
