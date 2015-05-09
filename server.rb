@@ -108,7 +108,7 @@ get '/:security' do
   best_and_worst_five = get_best_and_worst_five(security, price_changes)
 
   # erb :show, locals: { security: security, best_and_worst_five: best_and_worst_five }
-  json best_and_worst_five
+  json best_and_worst_five[security]
 end
 
 get '/stocks/:security' do

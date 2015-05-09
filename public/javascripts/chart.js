@@ -9,6 +9,18 @@ $(document).ready(function() {
     url: dynamicUrl,
     dataType:'json',
     success: function(data) {
+      var gains = [];
+      var losses = [];
+
+      for (var date in data) {
+        if (data[date] >= 0 ) {
+          gains.push([Date.parse(date), Math.round(100 * data[date])]);
+        }
+        else{
+          losses.push([Date.parse(date), Math.round(100 * data[date])]);
+        }
+      }
+
        $('#container').highcharts({
         chart: {
             type: 'scatter',
@@ -18,7 +30,7 @@ $(document).ready(function() {
             text: 'The Five Best and Worst Performing Days for Ticker ' + security.toUpperCase()
         },
         subtitle: {
-            text: 'Data Source: Tradier API'
+            text: 'Data Source: Tradier API, January 2010 to Current'
         },
         xAxis: {
             type: 'datetime'
@@ -66,16 +78,12 @@ $(document).ready(function() {
         series: [{
             name: 'Loss',
             color: 'rgba(223, 83, 83, .5)',
-            data: [[Date.UTC(2012, 06, 27), -12], [Date.UTC(2012, 04, 21), -11],
-                   [Date.UTC(2012, 04, 29), -10], [Date.UTC(2012, 08, 24), -9],
-                   [Date.UTC(2012, 04, 22), -9]]
+            data: losses
 
         }, {
             name: 'Gain',
             color: 'rgba(119, 152, 191, .5)',
-            data: [[Date.UTC(2012, 10, 26), 8], [Date.UTC(2012, 10, 14), 13],
-                   [Date.UTC(2014, 0, 30), 14], [Date.UTC(2012, 9, 24), 19],
-                   [Date.UTC(2013, 6, 25), 30]]
+            data: gains
         }]
     });
     },
