@@ -21,6 +21,22 @@ $(document).ready(function() {
         }
       }
 
+      var sum = 0;
+
+      for (i = 0; i < gains.length; i++) {
+        sum = sum + gains[i][1];
+      }
+
+      var averageGain = sum / gains.length;
+
+      var sum = 0;
+
+      for (i = 0; i < losses.length; i++) {
+        sum = sum + losses[i][1];
+      }
+
+      var averageLoss = sum / losses.length;
+
        $('#container').highcharts({
         chart: {
             type: 'scatter',
@@ -59,18 +75,18 @@ $(document).ready(function() {
                     }
                 },
                 tooltip: {
-                    headerFormat: '<b>{series.name}</b><br>',
+                    headerFormat: '',
                     pointFormat: '{point.x:%Y-%m-%d}: {point.y} %'
                 }
             }
         },
         series: [{
-            name: 'Loss',
+            name: 'Average Loss: ' + averageLoss + '%',
             color: 'rgba(223, 83, 83, .5)',
             data: losses
 
         }, {
-            name: 'Gain',
+            name: 'Average Gain: ' + averageGain + '%',
             color: 'rgba(119, 152, 191, .5)',
             data: gains
         }]
