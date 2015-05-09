@@ -40,21 +40,10 @@ $(document).ready(function() {
                 text: 'Return (absolute value)'
             }
         },
-        legend: {
-            layout: 'vertical',
-            align: 'left',
-            verticalAlign: 'top',
-            x: 100,
-            y: 70,
-            itemDistance: 30,
-            floating: true,
-            backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
-            borderWidth: 1
-        },
         plotOptions: {
             scatter: {
                 marker: {
-                    radius: 7,
+                    radius: 10,
                     states: {
                         hover: {
                             enabled: true,
