@@ -1,5 +1,3 @@
-Using the Tradier API to get historical stock data.
-
 ##Introduction
 
 When I actively traded options in stocks around earnings events, stocks that had the *potential for meaningful volatility*<sup>1</sup> in an upcoming earnings event were the most interesting. I tended to play [straddles](http://www.investopedia.com/terms/s/straddle.asp) and [strangles](http://www.investopedia.com/terms/s/strangle.asp) around stocks that I expected to this kind of meaningful volatility. If they had the potential to be up or down significantly, I found them interesting. Some worked and many didn't, but the plays that worked meaningfully overwrote the costs of the ones that didn't, resulting in a profitable strategy.
