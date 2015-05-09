@@ -30,12 +30,100 @@ This tutorial will cover how to build a similar tool using the Tradier API.
 
 <sup>1</sup> *Potential for meaningful volatility* here means stocks that have some likelihood of having a percentage move that would differ meaningfully from prior percentage moves around an earnings event. If, on average, stock XYZ had moved around 5% and I, based on whatever research I had put together, expected the stock to move 10%, I would consider that 10% to be *meaningfully volatile*.
 
-##Introduction to Tradier
-* What is Tradier, what does it accomplish?
-* How to get setup on it.
-
 ##Using the Tradier API
-* How you would grab some small piece of data with the Tradier API.
+[Tradier](https://www.tradier.com) is a modern stock brokerage that differs in a really important way by offering an API that I think will help modernize and accelerate the brokerage and stock analysis industry. They offer the following:
+
+```
+[A] REST-based, truly open and secure API that delivers trading, real-time market data, and simple, seamless account opening and funding for investors, advisors, and traders.
+```
+
+What we care about in this tutorial is the vast amount of historical data that Tradier offers through its API. [A brief interlude about how difficult it would be for average investors to have access to this kind of stuff in the past]
+
+I won't get into any details about how to get a Tradier API key, but if you click [Sign Up](https://developer.tradier.com/user/sign_up) on their Developer page, you'll be able to fill out some details to get access to their Sandbox, which gets you admission to their data through their API. Once you have an API key, you'll be able hit their API for the data you want. Make sure to store it in a `.env` file. The Github [repo](https://github.com/vikram7/tutorial-tradier-historicals) has a `.env.example` file to reflect what yours should look like. Also run `source .env` from your command line to make sure the API token is in your environment variable.
+
+<sub>By the way, there is a Tradier Ruby [gem](https://github.com/tradier/tradier.rb), but I haven't looked into it that closely. This tutorial will outline how to hit the API directly rather than through a wrapper.</sub>
+
+###Getting the Data
+
+Let's take on something small first just to make sure we're able to hit the API. Say we want to grab AAPL quote data. According to the docs, the endpoint we care about is the following one:
+
+```
+"https://sandbox.tradier.com/v1/markets/quotes?symbols=AAPL"
+```
+
+We can hit that API endpoint in Tradier's sandbox and hopefully we'll get back the latest quote data on AAPL. Try running the following Ruby code in `pry` or `IRB`:
+
+```ruby
+require 'uri'
+require 'net/https'
+require 'json'
+
+uri = URI.parse("https://sandbox.tradier.com/v1/markets/quotes?symbols=AAPL")
+http = Net::HTTP.new(uri.host, uri.port)
+http.read_timeout = 30
+http.use_ssl = true
+http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+request = Net::HTTP::Get.new(uri.request_uri)
+request["Accept"] = "application/json"
+request["Authorization"] = "Bearer " + ENV["TOKEN"]
+underlying_data = http.request(request)
+```
+
+If we look at `underlying_data`, we see the following response:
+
+```ruby
+=> #<Net::HTTPOK 200 OK readbody=true>
+```
+
+Let's call the response body and see what that looks like:
+
+```ruby
+underlying_data.body
+=> "{\"quotes\":{\"quote\":{\"symbol\":\"AAPL\",\"description\":\"Apple Inc\",\"exch\":\"Q\",\"type\":\"stock\",\"last\":127.62,\"change\":2.36,\"change_percentage\":1.8900000000000001,\"volume\":55550382,\"average_volume\":52807718,\"last_volume\":0,\"trade_date\":1431116100000,\"open\":126.68,\"high\":127.62,\"low\":126.11,\"close\":127.62,\"prevclose\":125.26,\"week_52_high\":134.54,\"week_52_low\":82.904285,\"bid\":102.03,\"bidsize\":1,\"bidexch\":\"Q\",\"bid_date\":1431129600000,\"ask\":127.59,\"asksize\":0,\"askexch\":\"Q\",\"ask_date\":1431129600000,\"root_symbols\":\"AAPL,AAPL7\"}}}"
+```
+
+That's definitely more readable, but we can do better. We need to parse this response as JSON with the following line of code:
+
+```ruby
+parsed_underlying_data = JSON.parse(underlying_data.body)
+```
+
+Which returns . . .
+
+```ruby
+=> {"quotes"=>
+  {"quote"=>
+    {"symbol"=>"AAPL",
+     "description"=>"Apple Inc",
+     "exch"=>"Q",
+     "type"=>"stock",
+     "last"=>127.62,
+     "change"=>2.36,
+     "change_percentage"=>1.8900000000000001,
+     "volume"=>55550382,
+     "average_volume"=>52807718,
+     "last_volume"=>0,
+     "trade_date"=>1431116100000,
+     "open"=>126.68,
+     "high"=>127.62,
+     "low"=>126.11,
+     "close"=>127.62,
+     "prevclose"=>125.26,
+     "week_52_high"=>134.54,
+     "week_52_low"=>82.904285,
+     "bid"=>102.03,
+     "bidsize"=>1,
+     "bidexch"=>"Q",
+     "bid_date"=>1431129600000,
+     "ask"=>127.59,
+     "asksize"=>0,
+     "askexch"=>"Q",
+     "ask_date"=>1431129600000,
+     "root_symbols"=>"AAPL,AAPL7"}}}
+```
+
+Perfect! We have a good deal of quote related data in the response and now it's in a format we can do something with. We could do more by appending more symbols to the API endpoint, but I think the idea is fairly clear here. Now that we know that our API calls are working, let's get what we need: historical data.
+
 * How you would get historical data.
 * Writing Ruby code to parse that data.
 * How you would use Sinatra to make an API that returns that data.
