@@ -24,8 +24,6 @@ INTERNET_STOCKS = %w[
 def get_historicals(security)
   historicals = Hash.new
 
-  count = 1
-
   uri = URI.parse("https://sandbox.tradier.com/v1/markets/history?symbol=#{security}&start=2010-01-01")
   http = Net::HTTP.new(uri.host, uri.port)
   http.read_timeout = 30
@@ -49,8 +47,7 @@ def get_historicals(security)
     historicals[security][date]["close"] = close
     historicals[security][date]["volume"] = volume
   end
-  puts "#{count}: #{security}. got tradier data."
-  count += 1
+  puts "#{security}. got tradier data."
 
   historicals
 end
