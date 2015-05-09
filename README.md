@@ -23,7 +23,10 @@ After hooking up to the Tradier API in Ruby with a [Sinatra](www.sinatrarb.com) 
 This tutorial will cover how to build a similar tool using the Tradier API.
 
 ###How we'll get there
-* Explanation of how we'll get there.
+* First we'll take a look at the [Tradier API](https://developer.tradier.com/).
+* Next, we'll write Ruby code to get historical data for a stock in a Sinatra server.
+* Then, we'll calculate the largest five moves in both directions for a particular stock and return it to our front end.
+* Finally, we'll implement an AJAX request to get those moves and push them into a [Highcharts](https://www.highcharts.com) scatter plot using Javascript.
 
 <sup>1</sup> *Potential for meaningful volatility* here means stocks that have some likelihood of having a percentage move that would differ meaningfully from prior percentage moves around an earnings event. If, on average, stock XYZ had moved around 5% and I, based on whatever research I had put together, expected the stock to move 10%, I would consider that 10% to be *meaningfully volatile*.
 
