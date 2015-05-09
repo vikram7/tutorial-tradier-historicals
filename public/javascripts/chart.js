@@ -9,23 +9,73 @@ $(document).ready(function() {
     url: dynamicUrl,
     dataType:'json',
     success: function(data) {
-      $('#container').highcharts({
-
+       $('#container').highcharts({
         chart: {
-            type: 'bubble',
+            type: 'scatter',
             zoomType: 'xy'
         },
-
         title: {
-            text: "Ticker: " + security.toUpperCase()
+            text: 'Ticker: ' + security.toUpperCase()
         },
-
+        subtitle: {
+            text: 'Data Source: Tradier API'
+        },
+        xAxis: {
+            type: 'datetime'
+        },
+        yAxis: {
+            title: {
+                text: 'Return (absolute value)'
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'left',
+            verticalAlign: 'top',
+            x: 100,
+            y: 70,
+            itemDistance: 30,
+            floating: true,
+            backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
+            borderWidth: 1
+        },
+        plotOptions: {
+            scatter: {
+                marker: {
+                    radius: 10,
+                    states: {
+                        hover: {
+                            enabled: true,
+                            lineColor: 'rgb(100,100,100)'
+                        }
+                    }
+                },
+                states: {
+                    hover: {
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                },
+                tooltip: {
+                    headerFormat: '<b>{series.name}</b><br>',
+                    pointFormat: '{point.x:%Y-%m-%d}: {point.y} %'
+                }
+            }
+        },
         series: [{
-            data: [[97, 36, 79], [94, 74, 60], [68, 76, 58], [64, 87, 56], [68, 27, 73], [74, 99, 42], [7, 93, 87], [51, 69, 40], [38, 23, 33], [57, 86, 31]]
+            name: 'Loss',
+            color: 'rgba(223, 83, 83, .5)',
+            data: [[Date.UTC(2012, 06, 27), -12], [Date.UTC(2012, 04, 21), -11],
+                   [Date.UTC(2012, 04, 29), -10], [Date.UTC(2012, 08, 24), -9],
+                   [Date.UTC(2012, 04, 22), -9]]
+
         }, {
-            data: [[25, 10, 87], [2, 75, 59], [11, 54, 8], [86, 55, 93], [5, 3, 58], [90, 63, 44], [91, 33, 17], [97, 3, 56], [15, 67, 48], [54, 25, 81]]
-        }, {
-            data: [[47, 47, 21], [20, 12, 4], [6, 76, 91], [38, 30, 60], [57, 98, 64], [61, 17, 80], [83, 60, 13], [67, 78, 75], [64, 12, 10], [30, 77, 82]]
+            name: 'Gain',
+            color: 'rgba(119, 152, 191, .5)',
+            data: [[Date.UTC(2012, 10, 26), 8], [Date.UTC(2012, 10, 14), 13],
+                   [Date.UTC(2014, 0, 30), 14], [Date.UTC(2012, 9, 24), 19],
+                   [Date.UTC(2013, 6, 25), 30]]
         }]
     });
     },
