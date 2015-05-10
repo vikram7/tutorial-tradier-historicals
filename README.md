@@ -6,7 +6,7 @@ I'd often look at Bloomberg's `EE` function to determine whether or not a trade 
 
 ![alt](http://i.imgur.com/b4Cc5rL.png)
 
-In addition to the above data, `EE` would provide past percentage moves following an earnings event for a company. If AAPL had a fantastic earnings event in the past it might move +8% afterwards. If TWTR had a horrendous earnings event (like recently), it might be move -27%. Conversely, some stocks like GE or F might not move a lot around earningss. Understanding how much a stock had moved in the past is an essential part of determining whether or not a future options trade is worth putting on.
+In addition to the above data, `EE` would provide past percentage moves following an earnings event for a company. If AAPL had a fantastic earnings event in the past it might move +8% afterwards. If TWTR had a horrendous earnings event (like recently), it might be move -27%. Conversely, some stocks like GE or F might not move a lot around earnings. Understanding how much a stock had moved in the past is an essential part of determining whether or not a future options trade is worth putting on.
 
 Now that I don't have Bloomberg anymore, I wanted to see if there was an easy way to get similar data. While not exactly the same, I was able to get historical stock data to determine the largest positive and negative returns of a stock over the last five years using the [Tradier API](https://developer.tradier.com/). Finding out those returns would serve as a reasonable proxy for determining a stock's ability to move around earnings.
 
