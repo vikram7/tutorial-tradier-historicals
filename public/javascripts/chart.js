@@ -22,19 +22,15 @@ $(document).ready(function() {
       }
 
       var sum = 0;
-
       for (i = 0; i < gains.length; i++) {
         sum = sum + gains[i][1];
       }
-
       var averageGain = sum / gains.length;
 
       var sum = 0;
-
       for (i = 0; i < losses.length; i++) {
         sum = sum + losses[i][1];
       }
-
       var averageLoss = sum / losses.length;
 
        $('#container').highcharts({
