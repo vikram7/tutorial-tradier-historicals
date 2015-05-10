@@ -171,7 +171,7 @@ Great! It looks like we have historical data from January 4, 2010 (the first tra
 
 Since we're going to have a Sinatra server acting as a workhorse for our API calls, we might as well set it up right. `touch Gemfile` in your root directory and populate it with the following code. We will need `sinatra`, `sinatra-contrib` and `pry`:
 
-``ruby
+```ruby
 source 'https://rubygems.org'
 
 gem 'sinatra'
