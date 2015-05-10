@@ -489,12 +489,10 @@ Ok great, now that we know our data is what we expect, we can use it to make som
 
 Some familiarity with [Highcharts](https://www.highcharts.com) might be helpful for this last section. I covered Highcharts in two prior tutorials: [Enter Highcharts](http://vikramis.me/2015/05/01/enter-highcharts/) and [Wiring up Highcharts with a Rails API](http://vikramis.me/2015/05/01/highcharts-with-a-rails-api/). They might be good reference on the basics if you aren't familiar with it.
 
-First run `mkdir public/javascripts` and `touch public/javascripts/chart.js` to generate that directory and respective file. Let's walk through the rest of the logic here:sl
+First make a directory called `public/javascripts` and `touch public/javascripts/chart.js` to generate that directory and respective file. Let's walk through the rest of the logic here:
 
-```
-1. Populate our show.erb file to have a container that will display the scatter plot
-2. Write a public/javascript/chart.js file that will contain an AJAX GET request for the data at /data/:security and generates the scatter plot
-```
+1. Populate our show.erb file to have a container that will display the scatter plot.
+2. Write a public/javascript/chart.js file that will contain an AJAX GET request for the data at /data/:security and generates the scatter plot.
 
 First, let's add a container to our `show.erb` file for the chart. We're going to have to include jQuery, a couple highcharts libraries and the `chart.js` file as well:
 
