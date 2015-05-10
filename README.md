@@ -593,7 +593,7 @@ var averageLoss = sum / losses.length;
 
 Now we just need to plug those variables into the right spots of the pre-built Highcharts [scatterplot](http://www.highcharts.com/demo/scatter). Note that I've renamed axes, title and subtitle among other chart attributes. Also, we need to change `url` based on the route we're on and the security we care about. We can do that by manipulating the url we've visited:
 
-```
+```javascript
 $(document).ready(function() {
   var thisUrlAsArray = window.location.href.split("/");
   var security = thisUrlAsArray[thisUrlAsArray.length - 1];
