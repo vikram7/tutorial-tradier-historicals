@@ -1,7 +1,7 @@
 $(document).ready(function() {
   var thisUrlAsArray = window.location.href.split("/");
   var security = thisUrlAsArray[thisUrlAsArray.length - 1];
-  var dynamicUrl = "http://localhost:4567/" + security;
+  var dynamicUrl = "http://localhost:4567/data/" + security;
 
   $.ajax({
     cache: false,
