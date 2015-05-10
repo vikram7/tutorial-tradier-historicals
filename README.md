@@ -489,14 +489,210 @@ Ok great, now that we know our data is what we expect, we can use it to make som
 
 Some familiarity with [Highcharts](https://www.highcharts.com) might be helpful for this last section. I covered Highcharts in two prior tutorials: [Enter Highcharts](http://vikramis.me/2015/05/01/enter-highcharts/) and [Wiring up Highcharts with a Rails API](http://vikramis.me/2015/05/01/highcharts-with-a-rails-api/). They might be good reference on the basics if you aren't familiar with it.
 
-Let's walk through some of the logic here.
+First run `mkdir public/javascripts` and `touch public/javascripts/chart.js` to generate that directory and respective file. Let's walk through the rest of the logic here:sl
 
 ```
-1. Add code in our show.erb file to have a container that will display the scatter plot
+1. Populate our show.erb file to have a container that will display the scatter plot
 2. Write a public/javascript/chart.js file that will contain an AJAX GET request for the data at /data/:security and generates the scatter plot
 ```
 
+First, let's add a container to our `show.erb` file for the chart. We're going to have to include jQuery, a couple highcharts libraries and the `chart.js` file as well:
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tradier App</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="http://code.highcharts.com/modules/exporting.js"></script>
+    <script src="/javascripts/chart.js"></script>
+  </head>
 
+  <body>
+    <div id="container" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto"></div>
+  </body>
+</html>
+```
 
-* Show finished product.
+Great. This view will get rendered when we visit any security in the form of `http://localhost:4567/stocks/:security`. Right now it's empty which you can tell from your browser. If we visit `http://localhost:4567/stocks/twtr` we will see a white background. Let's update our `public/javascripts/chart.js` to change that. We'll put in a placeholder AJAX call to make sure it's working:
+
+```javascript
+$(document).ready(function() {
+  $.ajax({
+    cache: false,
+    type: "GET",
+    url: 'http://localhost:4567/data/twtr',
+    dataType:'json',
+    success: function(data) {
+      alert("AJAX call worked!")
+    },
+    error: function() {
+      alert("Sorry, something went wrong!")
+    }
+  });
+});
+```
+
+Our AJAX `GET` request is hitting the `http://localhost:4567/data/twtr` route to and alerting us that it worked. When you visit `http://localhost:4567/stocks/twtr` now, you should see something like the following:
+
+![alt](http://i.imgur.com/1JV6raH.png)
+
+Now that we know our AJAX call working, we can update it step by step to get the data to display. The argument `data`, which is the JSON object getting sent from our `/data/twtr` path, can be manipulated to separate the gains from the losses in a format that's Highcharts friendly. You should confirm this by putting a debugger after `success` and see what `data` looks like.
+
+We will want our series to look something like this:
+
+`[[date1, return1], [date2, return2], [date3, return3], . . . ]`
+
+To do that, we can do the following:
+
+```javascript
+success: function(data) {
+  var gains = [];
+  var losses = [];
+
+  for (var date in data) {
+    if (data[date] >= 0 ) {
+      gains.push([Date.parse(date), Math.round(100 * data[date])]);
+    }
+    else{
+      losses.push([Date.parse(date), Math.round(100 * data[date])]);
+    }
+  }
+}
+```
+
+Once we have `gains` and `losses`, we can write some Javascript code to calculate the average gain and average loss to refer to in the chart's legend:
+
+```javascript
+var sum = 0;
+for (i = 0; i < gains.length; i++) {
+  sum = sum + gains[i][1];
+}
+var averageGain = sum / gains.length;
+
+var sum = 0;
+for (i = 0; i < losses.length; i++) {
+  sum = sum + losses[i][1];
+}
+var averageLoss = sum / losses.length;
+```
+
+Now we just need to plug those variables into the right spots of the pre-built Highcharts [scatterplot](http://www.highcharts.com/demo/scatter). Note that I've renamed axes, title and subtitle among other chart attributes. Also, we need to change `url` based on the route we're on and the security we care about. We can do that by manipulating the url we've visited:
+
+```
+$(document).ready(function() {
+  var thisUrlAsArray = window.location.href.split("/");
+  var security = thisUrlAsArray[thisUrlAsArray.length - 1];
+  var dynamicUrl = "http://localhost:4567/data/" + security;
+  .
+  .
+  .
+```
+
+After all that, our `chart.js` file will look like this:
+
+```javascript
+$(document).ready(function() {
+  var thisUrlAsArray = window.location.href.split("/");
+  var security = thisUrlAsArray[thisUrlAsArray.length - 1];
+  var dynamicUrl = "http://localhost:4567/data/" + security;
+
+  $.ajax({
+    cache: false,
+    type: "GET",
+    url: dynamicUrl,
+    dataType:'json',
+    success: function(data) {
+      var gains = [];
+      var losses = [];
+
+      for (var date in data) {
+        if (data[date] >= 0 ) {
+          gains.push([Date.parse(date), Math.round(100 * data[date])]);
+        }
+        else{
+          losses.push([Date.parse(date), Math.round(100 * data[date])]);
+        }
+      }
+
+      var sum = 0;
+      for (i = 0; i < gains.length; i++) {
+        sum = sum + gains[i][1];
+      }
+      var averageGain = sum / gains.length;
+
+      var sum = 0;
+      for (i = 0; i < losses.length; i++) {
+        sum = sum + losses[i][1];
+      }
+      var averageLoss = sum / losses.length;
+
+       $('#container').highcharts({
+        chart: {
+            type: 'scatter',
+            zoomType: 'xy'
+        },
+        title: {
+            text: 'The Five Best and Worst Performing Days for Ticker ' + security.toUpperCase()
+        },
+        subtitle: {
+            text: 'Data Source: Tradier API, January 2010 to Current'
+        },
+        xAxis: {
+            type: 'datetime'
+        },
+        yAxis: {
+            title: {
+                text: 'Return % (absolute value)'
+            }
+        },
+        plotOptions: {
+            scatter: {
+                marker: {
+                    radius: 10,
+                    states: {
+                        hover: {
+                            enabled: true,
+                            lineColor: 'rgb(100,100,100)'
+                        }
+                    }
+                },
+                states: {
+                    hover: {
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                },
+                tooltip: {
+                    headerFormat: '',
+                    pointFormat: '{point.x:%Y-%m-%d}: {point.y} %'
+                }
+            }
+        },
+        series: [{
+            name: 'Average Loss: ' + averageLoss + '%',
+            color: 'rgba(223, 83, 83, .5)',
+            data: losses
+
+        }, {
+            name: 'Average Gain: ' + averageGain + '%',
+            color: 'rgba(119, 152, 191, .5)',
+            data: gains
+        }]
+    });
+    },
+    error: function() {
+      alert("Sorry, something went wrong!")
+    }
+  });
+});
+```
+
+After all that, visiting `http://localhost:4567/stocks/twtr` should look like this:
+
+![alt](http://i.imgur.com/mX0xRwl.png)
+
+Nice work! Future tutorials will be how else we can play with the Tradier API to produce some valuable tools!
