@@ -184,7 +184,6 @@ Run `bundle install` and `touch server.rb` in the root directory to create the s
 
 ```
 .
-├── .env
 ├── Gemfile
 ├── Gemfile.lock
 ├── server.rb
@@ -539,6 +538,20 @@ $(document).ready(function() {
 Our AJAX `GET` request is hitting the `http://localhost:4567/data/twtr` route to and alerting us that it worked. When you visit `http://localhost:4567/stocks/twtr` now, you should see something like the following:
 
 ![alt](http://i.imgur.com/1JV6raH.png)
+
+By the way, just to stop for a second and make sure we have all the files we need in the right place, your directory structure should look like this:
+
+```
+.
+├── Gemfile
+├── Gemfile.lock
+├── public
+│   └── javascripts
+│       └── chart.js
+├── server.rb
+└── views
+    └── show.erb
+```
 
 Now that we know our AJAX call working, we can update it step by step to get the data to display. The argument `data`, which is the JSON object getting sent from our `/data/twtr` path, can be manipulated to separate the gains from the losses in a format that's Highcharts friendly. You should confirm this by putting a debugger after `success` and see what `data` looks like.
 
