@@ -40,6 +40,7 @@ This tutorial will cover how to build a similar tool using the Tradier API.
 What we care about in this tutorial is the vast amount of historical data that Tradier offers through its API. [A brief interlude about how difficult it would be for average investors to have access to this kind of stuff in the past]
 
 I won't get into any details about how to get a Tradier API key, but if you click [Sign Up](https://developer.tradier.com/user/sign_up) on their Developer page, you'll be able to fill out some details to get access to their Sandbox, which gets you admission to their data through their API. Once you have an API key, you'll be able hit their API for the data you want. Make sure to store it in a `.env` file. The Github [repo](https://github.com/vikram7/tutorial-tradier-historicals) has a `.env.example` file to reflect what yours should look like. Also run `source .env` from your command line to make sure the API token is in your environment variable.
+
 <sub>By the way, there is a Tradier Ruby [gem](https://github.com/tradier/tradier.rb), but I haven't looked into it that closely. This tutorial will outline how to hit the API directly rather than through a wrapper.</sub>
 
 ###Getting the Data
@@ -695,4 +696,6 @@ After all that, visiting `http://localhost:4567/stocks/twtr` should look like th
 
 ![alt](http://i.imgur.com/mX0xRwl.png)
 
-Nice work! Future tutorials will be how else we can play with the Tradier API to produce some valuable tools!
+Nice work! Producing some interesting visualizations wasn't too bad. We hit the Tradier API to get data we were intersted in. Following that, we parsed that data with Ruby in a format we cared about (JSON) based on some set of criteria (in our case, that criteria was to be able to see the best and worst five days and their respective returns). Finally, we did a bit of front-end work to grab that data with AJAX and display it.
+
+Future tutorials will be how else we can play with the Tradier API to produce some valuable tools!
