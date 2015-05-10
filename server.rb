@@ -5,20 +5,6 @@ require 'net/https'
 require 'json'
 require 'pry'
 
-INTERNET_STOCKS = %w[
-  FB
-  GOOGL
-  YELP
-  LNKD
-  AMZN
-  NFLX
-  EBAY
-  YHOO
-  TWTR
-  EXPE
-  PCLN
-]
-
 ## Get historical data from Tradier ##
 
 def get_historicals(security)
@@ -43,9 +29,7 @@ def get_historicals(security)
     date = data_on_date["date"]
     historicals[security][date] = Hash.new
     close = data_on_date["close"]
-    volume = data_on_date["volume"]
     historicals[security][date]["close"] = close
-    historicals[security][date]["volume"] = volume
   end
   puts "#{security}. got tradier data."
 
@@ -97,14 +81,13 @@ end
 
 ## Sinatra app ##
 
-get '/:security' do
+get '/data/:security' do
   security = params[:security].upcase
 
   historicals = get_historicals(security)
   price_changes = get_price_changes(security, historicals)
   best_and_worst_five = get_best_and_worst_five(security, price_changes)
 
-  # erb :show, locals: { security: security, best_and_worst_five: best_and_worst_five }
   json best_and_worst_five[security]
 end
 
