@@ -10,7 +10,7 @@ In addition to the above data, `EE` would provide past percentage moves followin
 
 Now that I don't have Bloomberg anymore, I wanted to see if there was an easy way to get similar data. While not exactly the same, I was able to get historical stock data to determine the largest positive and negative returns of a stock over the last five years using the [Tradier API](https://developer.tradier.com/). Finding out those returns would serve as a reasonable proxy for determining a stock's ability to move around earnings.
 
-After hooking up to the Tradier API in Ruby with a [Sinatra](www.sinatrarb.com) server and getting the data visualized with [Highcharts](https://www.highcharts.com) using a bit of Javascript and Ajax, I found that I could have a feature similar to what I had been using before as a professional trader:
+After hooking up to the Tradier API in Ruby with a [Sinatra](www.sinatrarb.com) server and getting the data visualized with [Highcharts](https://www.highcharts.com) using a bit of Javascript and AJAX, I found that I could have a feature similar to what I had been using before as a professional trader:
 
 ####AAPL
 
@@ -40,7 +40,6 @@ This tutorial will cover how to build a similar tool using the Tradier API.
 What we care about in this tutorial is the vast amount of historical data that Tradier offers through its API. [A brief interlude about how difficult it would be for average investors to have access to this kind of stuff in the past]
 
 I won't get into any details about how to get a Tradier API key, but if you click [Sign Up](https://developer.tradier.com/user/sign_up) on their Developer page, you'll be able to fill out some details to get access to their Sandbox, which gets you admission to their data through their API. Once you have an API key, you'll be able hit their API for the data you want. Make sure to store it in a `.env` file. The Github [repo](https://github.com/vikram7/tutorial-tradier-historicals) has a `.env.example` file to reflect what yours should look like. Also run `source .env` from your command line to make sure the API token is in your environment variable.
-
 <sub>By the way, there is a Tradier Ruby [gem](https://github.com/tradier/tradier.rb), but I haven't looked into it that closely. This tutorial will outline how to hit the API directly rather than through a wrapper.</sub>
 
 ###Getting the Data
@@ -166,12 +165,327 @@ parsed_underlying_data = JSON.parse(underlying_data.body)
      {"date"=>"2015-05-08", "open"=>126.68, "high"=>127.62, "low"=>126.11, "close"=>127.62, "volume"=>55550382}]}}
 ```
 
-Great! It looks like we have historical data from January 4, 2010 (the first trading day of that year) to the market close on Friday May 8, 2015. Keeping in mind that we're looking for the biggest positive and negative moves in a stock, we just need to parse that data to get the daily returns over the same time period.
+Great! It looks like we have historical data from January 4, 2010 (the first trading day of that year) to the market close on Friday May 8, 2015. Keeping in mind that we're looking for the biggest positive and negative moves in a stock, we just need to parse that data to get the daily returns over the same time period and then filter those for the best and worst returns.
 
-* Writing Ruby code to parse that data.
-* How you would use Sinatra to make an API that returns that data.
+###Setting up a Sinatra server
+
+Since we're going to have a Sinatra server acting as a workhorse for our API calls, we might as well set it up right. `touch Gemfile` in your root directory and populate it with the following code. We will need `sinatra`, `sinatra-contrib` and `pry`:
+
+``ruby
+source 'https://rubygems.org'
+
+gem 'sinatra'
+gem 'sinatra-contrib'
+gem 'pry'
+```
+
+Run `bundle install` and `touch server.rb` in the root directory to create the server file we'll be working with. We'll also require a `views` folder for the front end, so let's create a directory called views and a file `views/show.erb` which will serve as the view for scatter plot. At this point, your directory structure should look like the following:
+
+```
+.
+├── .env
+├── Gemfile
+├── Gemfile.lock
+├── server.rb
+└── views
+    └── show.erb
+```
+
+Let's get started on our `server.rb` file. We need to get from API call to the five best and worst performing days in a stock, so our logic will be something like the following:
+
+1. Make API call to get historical data
+2. Parse that historical data and create a temporary data structure to store daily returns
+3. Filter the daily returns to get the five best and five worst dates and respective returns
+
+Here's a skeleton of what our server file will look like:
+
+```ruby
+require 'sinatra'
+require 'sinatra/json'
+require 'uri'
+require 'net/https'
+require 'json'
+
+## Get historical data from Tradier ##
+
+def get_historicals(security)
+  #return historical data
+end
+
+## Calculate price changes by day ##
+
+def get_price_changes(security, historicals)
+  # return data structure of price changes
+end
+
+## Get 5 best and 5 worst performing dates ##
+
+def get_best_and_worst_five(security, price_changes)
+  # return data structure of best five and worst five days and respective returns
+end
+
+## Sinatra app ##
+
+## Route for AJAX request ##
+get '/data/:security' do
+  # return JSON of best and worst returns
+end
+
+## Route for view that has chart ##
+get '/stocks/:security' do
+  erb :show
+end
+```
+
+Let's work through each of these parts step by step. First off, our code from before reflects what we ned for the `get_historicals(security)` method:
+
+```ruby
+def get_historicals(security)
+  historicals = Hash.new
+
+  uri = URI.parse("https://sandbox.tradier.com/v1/markets/history?symbol=#{security}&start=2010-01-01")
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.read_timeout = 30
+  http.use_ssl = true
+  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+  request = Net::HTTP::Get.new(uri.request_uri)
+  request["Accept"] = "application/json"
+  request["Authorization"] = "Bearer " + ENV["TOKEN"]
+  underlying_data = http.request(request)
+  parsed_underlying_data = JSON.parse(underlying_data.body)
+
+  historicals[security] = Hash.new
+
+  data_by_date = parsed_underlying_data["history"]["day"]
+
+  data_by_date.each do |data_on_date|
+    date = data_on_date["date"]
+    historicals[security][date] = Hash.new
+    close = data_on_date["close"]
+    historicals[security][date]["close"] = close
+  end
+  puts "#{security}. got tradier data."
+
+  historicals
+end
+```
+
+The second part of the method parses the returned underlying data and strips out the key things we care about: `date` and `close` (the stock's closing price). This returns a hash that looks like this:
+
+```ruby
+=> {"AAPL"=>
+  {"2010-01-04"=>{"close"=>30.572857},
+   "2010-01-05"=>{"close"=>30.625714},
+   .
+   .
+   .
+   "2015-05-07"=>{"close"=>125.26},
+   "2015-05-08"=>{"close"=>127.62}}}
+```
+
+With that hash, we want to get the daily returns, so we need to calculate the percentage difference between day<sub>n</sub> and day<sub>n-1</sub>:
+
+```ruby
+def get_price_changes(security, historicals)
+
+  price_changes = Hash.new
+
+  historicals.each do |security, date_and_data|
+    temp = nil
+    price_changes[security] = Hash.new
+    date_and_data.each do |date, data|
+      last_price = historicals[security][date]["close"]
+      prior_price = temp
+      if temp
+        price_changes[security][date] = last_price / prior_price - 1
+      end
+      temp = last_price
+    end
+  end
+
+  price_changes
+end
+```
+
+Instead of converting it into another data structure like an array, we can just do a bit of manipulation with a `temp` variable to generate another hash of all the price changes. Note that `temp` is initialized as `nil` so that we start these calculations on the *second* day. The output of `get_price_changes("AAPL", get_historicals("AAPL"))` would be the following:
+
+```ruby
+=> {"AAPL"=>
+  {"2010-01-05"=>0.001728886508709282,
+   "2010-01-06"=>-0.015906339359141097,
+   .
+   .
+   .
+   "2015-05-07"=>0.001999840012798959,
+   "2015-05-08"=>0.01884081111288527}}
+```
+
+Note that I'm keeping the key of the security in this hash in case we want to expand on this later on and store multiple securities. Now we just need to filter the above hash for the five best and five worst performing dates and their respective returns:
+
+```ruby
+def get_best_and_worst_five(security, price_changes)
+  best_and_worst_five = Hash.new
+
+  price_changes.each do |security, date_and_return|
+    best_and_worst_five[security] = Hash.new
+    sorted_dates_and_returns = date_and_return.sort_by { |date, value| value }
+    worst_dates_and_returns = sorted_dates_and_returns.first(5)
+    best_dates_and_returns = sorted_dates_and_returns.last(5)
+    worst_dates_and_returns.each do |date_and_return|
+      best_and_worst_five[security][date_and_return.first] = date_and_return.last
+    end
+    best_dates_and_returns.each do |date_and_return|
+      best_and_worst_five[security][date_and_return.first] = date_and_return.last
+    end
+  end
+
+  best_and_worst_five
+end
+```
+
+All that we're doing here is sorting the hash by the returns and then grabbing the first five and last five. This method returns the following:
+
+```ruby
+=> {"AAPL"=>
+  {"2013-01-24"=>-0.12354938328012632,
+   "2014-01-28"=>-0.07992733529505436,
+   "2012-12-05"=>-0.06434556880538289,
+   "2011-10-19"=>-0.05593975464190981,
+   "2013-04-17"=>-0.05499250148982382,
+   "2012-01-25"=>0.06243904804195233,
+   "2012-11-19"=>0.072112159719254,
+   "2010-05-10"=>0.07686763269000574,
+   "2014-04-24"=>0.08198189201721995,
+   "2012-04-25"=>0.08757666733553227}}
+```
+
+Great, so now we have the data that we need to eventually plot. What we're going to want to do now is think about the next steps. We'll have to issue an AJAX request to `/data/aapl` to get aapl's data (or `/data/:security` for any ticker). This is pretty straightforward. We grab the security from the params, `upcase` it so it's standardized and then run it through the methods we just devised above. Finally we return a json of the dates and returns of the best and worst five days:
+
+```ruby
+get '/data/:security' do
+  security = params[:security].upcase
+
+  historicals = get_historicals(security)
+  price_changes = get_price_changes(security, historicals)
+  best_and_worst_five = get_best_and_worst_five(security, price_changes)
+
+  json best_and_worst_five[security]
+end
+```
+
+Let's stop for a second and see what our entire `server.rb` file looks like up to this point:
+
+```ruby
+require 'sinatra'
+require 'sinatra/json'
+require 'uri'
+require 'net/https'
+require 'json'
+
+## Get historical data from Tradier ##
+
+def get_historicals(security)
+  historicals = Hash.new
+
+  uri = URI.parse("https://sandbox.tradier.com/v1/markets/history?symbol=#{security}&start=2010-01-01")
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.read_timeout = 30
+  http.use_ssl = true
+  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+  request = Net::HTTP::Get.new(uri.request_uri)
+  request["Accept"] = "application/json"
+  request["Authorization"] = "Bearer " + ENV["TOKEN"]
+  underlying_data = http.request(request)
+  parsed_underlying_data = JSON.parse(underlying_data.body)
+
+  historicals[security] = Hash.new
+
+  data_by_date = parsed_underlying_data["history"]["day"]
+
+  data_by_date.each do |data_on_date|
+    date = data_on_date["date"]
+    historicals[security][date] = Hash.new
+    close = data_on_date["close"]
+    historicals[security][date]["close"] = close
+  end
+  puts "#{security}. got tradier data."
+
+  historicals
+end
+
+## Calculate price changes by day ##
+
+def get_price_changes(security, historicals)
+
+  price_changes = Hash.new
+
+  historicals.each do |security, date_and_data|
+    temp = nil
+    price_changes[security] = Hash.new
+    date_and_data.each do |date, data|
+      last_price = historicals[security][date]["close"]
+      prior_price = temp
+      if temp
+        price_changes[security][date] = last_price / prior_price - 1
+      end
+      temp = last_price
+    end
+  end
+
+  price_changes
+end
+
+## Get 5 best and 5 worst performing dates ##
+
+def get_best_and_worst_five(security, price_changes)
+  best_and_worst_five = Hash.new
+
+  price_changes.each do |security, date_and_return|
+    best_and_worst_five[security] = Hash.new
+    sorted_dates_and_returns = date_and_return.sort_by { |date, value| value }
+    worst_dates_and_returns = sorted_dates_and_returns.first(5)
+    best_dates_and_returns = sorted_dates_and_returns.last(5)
+    worst_dates_and_returns.each do |date_and_return|
+      best_and_worst_five[security][date_and_return.first] = date_and_return.last
+    end
+    best_dates_and_returns.each do |date_and_return|
+      best_and_worst_five[security][date_and_return.first] = date_and_return.last
+    end
+  end
+
+  best_and_worst_five
+end
+
+## Sinatra app ##
+
+## Route for AJAX request ##
+get '/data/:security' do
+  security = params[:security].upcase
+
+  historicals = get_historicals(security)
+  price_changes = get_price_changes(security, historicals)
+  best_and_worst_five = get_best_and_worst_five(security, price_changes)
+
+  json best_and_worst_five[security]
+end
+
+## Route for view that has chart ##
+get '/stocks/:security' do
+  erb :show
+end
+```
+
+Let's check that this is working by hitting `http://localhost:4567/data/aapl`:
+
+![alt](http://i.imgur.com/ijcVpvO.png)
+
+Nice. What about `http://localhost:4567/data/twtr`?:
+
+![alt](http://i.imgur.com/jwaZKoG.png)
+
+Ok great, now that we know our data is what we expect, we can use it to make some nice looking charts!
 
 ##Plotting the data
-* How you would use the API to plot the data?
 * Link to other Highcharts tutorial.
+* Walk through AJAX logic and Javascript code.
 * Show finished product.
