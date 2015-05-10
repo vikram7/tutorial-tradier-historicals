@@ -711,4 +711,6 @@ After all that, visiting `http://localhost:4567/stocks/twtr` should look like th
 
 Nice work! Producing some interesting visualizations wasn't too bad. We hit the Tradier API to get data we were intersted in. Following that, we parsed that data with Ruby in a format we cared about (JSON) based on some set of criteria (in our case, that criteria was to be able to see the best and worst five days and their respective returns). Finally, we did a bit of front-end work to grab that data with AJAX and display it.
 
+There are some things we didn't really deal with here. For example, what if you tried navigating to a garbage security? Try it and see what happens. How would you protect against that?
+
 Future tutorials will be how else we can play with the Tradier API to produce some valuable tools!
